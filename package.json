@@ -1,0 +1,26 @@
+{
+  "name": "taller-practico---parejas-node-",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "node src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Steven123si/TALLER-PRACTICO---Parejas-NODE-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Steven123si/TALLER-PRACTICO---Parejas-NODE-/issues"
+  },
+  "homepage": "https://github.com/Steven123si/TALLER-PRACTICO---Parejas-NODE-#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  }
+}

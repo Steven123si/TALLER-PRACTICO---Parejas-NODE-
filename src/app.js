@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import tasksRouter from './routes/tasks.js';
+import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 const app = express();
@@ -11,6 +12,7 @@ app.get("/", (req, res) => {
   res.send("API running");
 });
 app.use('/tasks', tasksRouter);
+app.use("/auth", authRoutes);
 
 
 app.listen(PORT, () => {

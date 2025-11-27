@@ -1,120 +1,175 @@
-Commit 9 — Integración de Passport con estrategia JWT
+# API de Tareas — Proyecto Node.js + Express + Prisma
 
-Este commit implementa Passport junto con la estrategia JWT para proteger rutas y manejar autenticación basada en tokens de manera más robusta.
-
-¿Qué se hizo?
-
-1. Instalación de dependencias
-
-_passport_
-
-_passport-jwt_
+Este proyecto implementa una API REST para manejar usuarios y tareas.  
+Incluye autenticación, seguridad, middlewares, validaciones, y un sistema completo CRUD.
 
 
+## carpetas utilizadas
 
-2. Configuración de la estrategia JWT
-
-Se creó el archivo:
-
-_src/config/passport.js_
-
-
-Allí se define:
-
-Cómo extraer el JWT desde el header Authorization: Bearer <token>.
-
-Qué clave usar para verificar el token (JWT_SECRET).
-
-Cómo buscar el usuario en la base de datos a partir del payload decodificado.
+- Node.js
+- Express
+- Prisma ORM
+- SQLite
+- JWT (Json Web Tokens)
+- bcryptjs
+- Passport (estrategia JWT)
+- CORS
+- express-rate-limit
+- dotenv
 
 
+## Estructura del proyecto
 
-3. Protección de rutas con Passport
-
-En app.js se implementó: passport.authenticate("jwt", { session: false })
-
-Esto asegura que solo usuarios autenticados puedan acceder a rutas como /tasks.
+- /src
+- /controllers
+- /routes
+- /middleware
+- /prisma
+- app.js
+- /docs
+- README.md
+- .env.example
+- package.json
 
 
 
-4. Asociación correcta del usuario autenticado
+##  Instalación y configuración
 
-El token contiene el campo:
+1. Clonar el repositorio
 
+- git clone <tu-repo>
+- cd <carpeta>
 
-{ "userId": <id-del-usuario> }
+2. Instalar dependencias
 
+npm install
 
-Passport lo lee y lo adjunta como: req.user
+3. Crear archivo .env
 
-De esta forma, todas las tareas creadas o consultadas quedan asociadas al usuario autenticado.
+No subir el .env al repositorio.
 
+4. Configurar Prisma
+npx prisma generate
+npx prisma migrate dev --name init
+(Esto genera las tablas User y Task automáticamente.)
 
+## Seguridad implementada
 
-¿Por qué usar Passport si ya existía un middleware personalizado?
+1. Hash de contraseñas (bcrypt)
 
-Aunque ya teníamos un middleware propio para validar JWT, se decidió integrar Passport porque:
+Las contraseñas nunca se almacenan en texto plano.
+Se usa bcrypt.hash(password, 10) al registrarse.
+En login se compara con bcrypt.compare().
 
-1. Estandariza la autenticación
+2. JWT para autenticación
 
-Passport es una librería usada internacionalmente, probada y mantenida.
-Aporta estabilidad, compatibilidad y buenas prácticas.
+Se genera token al hacer login.
+Incluye { sub: user.id } y expira en 1 hora.
+Para rutas protegidas se debe enviar: Authorization: Bearer <token>
 
+3. Middleware de autenticación
 
-2. Facilita agregar más estrategias si en el futuro queremos añadir:
+Archivo: src/middleware/authMiddleware.js
 
-OAuth (Google, GitHub, Facebook)
+Se realizó:
 
-Auth local
+- Verificar token
+- Decodificarlo
+- Adjuntar userId a req.user
 
-Tokens de refresco
+Si no existe token → 401
+Si token inválido → 403
 
-Passport ya lo soporta sin reescribir lógica desde cero.
+4. CORS
 
+En app.js: app.use(cors({ origin: "*" }));
 
-3. Reduce lógica duplicada
+Permite consumir la API desde cualquier frontend.
+Se puede restringir cuando el proyecto pase a producción.
 
-El middleware propio validaba tokens manualmente.
-Passport abstrae eso, evita errores y mantiene el código más limpio.
+5. Rate limit
 
+Protecciones configuradas:
 
-4. Requiere menos código para proteger rutas
+/auth/login
 
-Con Passport basta con:
+Maximo 5 intentos por minuto
+Evita ataques de fuerza bruta.
 
-passport.authenticate("jwt", { session: false })
+/tasks
 
-Sin necesidad de revalidar el token en cada controlador.
+Maximo 20 solicitudes por minuto
+Evita abuso de la API.
 
+6. Variables de entorno
 
-5. Mejor mantenimiento a largo plazo
+Todo lo sensible (DB, secret keys) está dentro de .env
+.env está ignorado por Git mediante .gitignore.
 
-El equipo puede entender, extender o reemplazar estrategias sin tocar demasiados archivos.
+Esto protege claves privadas.
 
+## Endpoints disponibles
 
+1. Autenticación
 
-_Validación del Commit 9_
+POST /auth/register
 
-Se realizaron las siguientes pruebas:
+Registra un usuario.
 
-1. Login exitoso
+POST /auth/login
 
-El endpoint /auth/login devuelve un JWT válido con este formato:
+Devuelve token JWT.
+
+2. Tareas (requiere JWT)
+GET /tasks
+
+Listar tareas del usuario logueado.
+
+POST /tasks
+
+Crear tarea.
+
+PUT /tasks/:id
+
+Editar tarea.
+
+DELETE /tasks/:id
+
+Eliminar tarea.
+
+## Cómo probar la API
+
+1. Registrar usuario
+POST http://localhost:3000/auth/register
 
 {
-  "userId": 3,
-  "iat": ...,
-  "exp": ...
+  "email": "test@test.com",
+  "password": "123456"
 }
 
-2. Solicitud a /tasks SIN token
+2. Iniciar sesión
+POST http://localhost:3000/auth/login
+→ devuelve token
 
-Resultado esperado → 401 Unauthorized.
+3. Probar rutas protegidas
+Agregar en el Header:
+Authorization: Bearer <token>
 
-3. Solicitud a /tasks CON token válido
+## Cómo ejecutar
+npm run start
 
-Resultado → acceso permitido, Passport reconoce al usuario.
+### Para desarrollo:
+npm run dev
 
-4. Rutas protegidas se comportan correctamente
+## Estado final de los commits
 
-Las tareas creadas listan solo las del usuario dueño del token.
+1. Inicialización del proyecto
+2. Configuración de Prisma
+3. CRUD de tareas
+4. Documentación PRISMA
+5. Registro de usuario
+6. Login con JWT
+7. Middleware de autenticación
+8. CORS y rate limiting
+9. Passport JWT
+10. README terminado (este commit)
